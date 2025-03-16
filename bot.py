@@ -65,8 +65,9 @@ async def set_delete_time(_, message):
         upsert=True
     )
     
+    user_mention = message.from_user.mention if message.from_user else "Unknown User"
     await message.reply_text(f"**Set delete time to {delete_time} seconds for this group.**")
-    await user_bot.send_message(LOG_CHANNEL, f"User {message.from_user.mention} set delete time to {delete_time} seconds in {message.chat.title} ({chat_id})")
+    await user_bot.send_message(LOG_CHANNEL, f"User {user_mention} set delete time to {delete_time} seconds in {message.chat.title} ({chat_id})")
 
 @user_bot.on_message(filters.group & ~filters.command(["set_time", "start", "delete_all"]))
 async def delete_message(client, message):
@@ -93,14 +94,17 @@ async def delete_all_messages(client, message):
         await message.reply("Only group admins can use this command.")
         return
     
-    async for msg in user_bot.get_chat_history(chat_id, limit=1000):
+    deleted_count = 0
+    async for msg in user_bot.get_chat_history(chat_id):
         try:
             await client.delete_messages(chat_id, msg.id)
+            deleted_count += 1
         except Exception as e:
             print(f"Error deleting message {msg.id}: {e}")
     
-    await message.reply("✅ Successfully deleted all messages in this group/channel!")
-    await user_bot.send_message(LOG_CHANNEL, f"User {message.from_user.mention} deleted all messages in {message.chat.title} ({chat_id})")
+    await message.reply(f"✅ Successfully deleted {deleted_count} messages in this group/channel!")
+    user_mention = message.from_user.mention if message.from_user else "Unknown User"
+    await user_bot.send_message(LOG_CHANNEL, f"User {user_mention} deleted all messages in {message.chat.title} ({chat_id})")
 
 # Flask configuration
 app = Flask(__name__)

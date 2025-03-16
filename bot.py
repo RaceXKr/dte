@@ -84,7 +84,7 @@ async def delete_message(client, message):
     if delete_time > 0:
         await asyncio.sleep(delete_time)
         try:
-            await client.delete_messages(chat_id, message.message_id)
+            await client.delete_messages(chat_id, message.id)  # Corrected attribute
         except Exception as e:
             print(f"An error occurred: {e}\nGroup ID: {chat_id}")
 

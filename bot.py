@@ -73,7 +73,7 @@ async def set_delete_time(_, message):
     
     await message.reply_text(f"**Set delete time to {delete_time} seconds for this group.**")
 
-@bot.on_message(filters.group & filters.text | filters.media)
+@bot.on_message(filters.group & (filters.text | filters.media | filters.service))
 async def delete_message(_, message):
     chat_id = message.chat.id
     group = await groups.find_one({"group_id": chat_id})
@@ -89,12 +89,11 @@ async def delete_message(_, message):
             print(f"An error occurred: {e}\nGroup ID: {chat_id}")
 
 # Flask configuration
-
 app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return redirect("https://telegram.me/kristyx_TG", code=302)
+    return redirect(f"https://telegram.me/AboutRazi", code=302)
 
 def run():
     app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 8080)))

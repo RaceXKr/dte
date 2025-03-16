@@ -104,3 +104,21 @@ if __name__ == "__main__":
     t = Thread(target=run)
     t.start()
     bot.run()    
+
+# 🌟 KEEP ALIVE FUNCTION USING AIOHTTP 🌟
+import asyncio
+from aiohttp import ClientSession
+
+async def keep_alive():
+    url = f"https://mamithadelete.koyeb.app"  # Replace APP_NAME with your actual Koyeb app name
+    while True:
+        try:
+            async with ClientSession() as session:
+                async with session.get(url) as response:
+                    print(f"Keep-alive ping sent! Status: {response.status}")
+        except Exception as e:
+            print(f"Keep-alive error: {e}")
+        await asyncio.sleep(300)  # Ping every 5 minutes
+
+# Start Keep-Alive Task
+asyncio.create_task(keep_alive())

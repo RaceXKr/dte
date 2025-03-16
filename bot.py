@@ -8,9 +8,10 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 API_ID = int(os.environ.get("API_ID", 29394851))
 API_HASH = os.environ.get("API_HASH", "4a97459b3db52a61a35688e9b6b86221")
-USER_SESSION = os.environ.get("USER_SESSION", "AgHAh6MAtgaeUygtEKQ79xLpyRtnQtKiEOTvpRajN6EFDRG6m8cmj_qAdmyBFC7ikQkZaprRhNcUcY5WtJaAHFQQxA0rcSP5XBfAWVfpXQBWRAgRX8OtljxeW9NPaVLj5us2t2jPW1MGem7ozdedoTqSDuItwvtnGDt2EilVC1QFyuq-nCRHA_3Auu1FY0pspnD9jZBHXw-s8OaERD_m5qwDv1R6avKuiiE2uMktXFtoYKa9qTOfe82VnvMyF95HA9_m_TBfmNL-exkWjTQFVV1G9xD2TasjfKm8S0YsJphWPR8oO73ErjDleU5HrZMJ-NCwubGn8ZFWUnRPRk3JGTtShpeEDgAAAAGdPH8SAA") 
+USER_SESSION = os.environ.get("USER_SESSION", "AgHAh6MAtgaeUygtEKQ79xLpyRtnQtKiEOTvpRajN6EFDRG6m8cmj_qAdmyBFC7ikQkZaprRhNcUcY5WtJaAHFQQxA0rcSP5XBfAWVfpXQBWRAgRX8OtljxeW9NPaVLj5us2t2jPW1MGem7ozdedoTqSDuItwvtnGDt2EilVC1QFyuq-nCRHA_3Auu1FY0pspnD9jZBHXw-s8OaERD_m5qwDv1R6avKuiiE2uMktXFtoYKa9qTOfe82VnvMyF95HA9_m_TBfmNL-exkWjTQFVV1G9xD2TasjfKm8S0YsJphWPR8oO73ErjDleU5HrZMJ-NCwubGn8ZFWUnRPRk3JGTtShpeEDgAAAAGdPH8SAA")  # Use a Pyrogram user session
 DATABASE_URL = os.environ.get("DATABASE_URL", "mongodb+srv://krkkanish2:kx@cluster0.uhrg1rj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 BOT_USERNAME = os.environ.get("BOT_USERNAME", "kdeletebot")
+LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", "-1002572497930"))  # Log channel ID
 
 # Database setup
 client = AsyncIOMotorClient(DATABASE_URL)
@@ -49,11 +50,11 @@ async def set_delete_time(_, message):
         return
     
     chat_id = message.chat.id
-    user_id = message.from_user.id
+    user_id = message.from_user.id if message.from_user else None
     
     # Check if the user is an admin
     administrators = [m.user.id async for m in user_bot.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS)]
-    if user_id not in administrators:
+    if user_id and user_id not in administrators:
         await message.reply("Only group admins can enable or disable auto delete.")
         return
     
@@ -65,6 +66,7 @@ async def set_delete_time(_, message):
     )
     
     await message.reply_text(f"**Set delete time to {delete_time} seconds for this group.**")
+    await user_bot.send_message(LOG_CHANNEL, f"User {message.from_user.mention} set delete time to {delete_time} seconds in {message.chat.title} ({chat_id})")
 
 @user_bot.on_message(filters.group & ~filters.command(["set_time", "start", "delete_all"]))
 async def delete_message(client, message):
@@ -84,10 +86,10 @@ async def delete_message(client, message):
 @user_bot.on_message(filters.command("delete_all"))
 async def delete_all_messages(client, message):
     chat_id = message.chat.id
-    user_id = message.from_user.id
+    user_id = message.from_user.id if message.from_user else None  # Handle channels
     
     administrators = [m.user.id async for m in user_bot.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS)]
-    if user_id not in administrators:
+    if user_id and user_id not in administrators:
         await message.reply("Only group admins can use this command.")
         return
     
@@ -98,6 +100,7 @@ async def delete_all_messages(client, message):
             print(f"Error deleting message {msg.id}: {e}")
     
     await message.reply("✅ Successfully deleted all messages in this group/channel!")
+    await user_bot.send_message(LOG_CHANNEL, f"User {message.from_user.mention} deleted all messages in {message.chat.title} ({chat_id})")
 
 # Flask configuration
 app = Flask(__name__)

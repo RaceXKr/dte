@@ -29,7 +29,7 @@ async def accept_all_requests(client, message):
             await user_bot.approve_chat_join_request(chat_id, request.from_user.id)
             approved_count += 1
         except Exception as e:
-            print(f"Error approving {request.from_user.id}: {e}")
+            print(f"Error approving {request.user.id}: {e}")
     
     await message.reply(f"✅ Approved {approved_count} pending requests!")
     await user_bot.send_message(LOG_CHANNEL, f"Approved {approved_count} requests in {message.chat.title} ({chat_id})")
@@ -54,7 +54,7 @@ import asyncio
 from aiohttp import ClientSession
 
 async def keep_alive():
-    url = f"https://low-lesly-selvarajsangeeth419-4a099a4d.koyeb.app/"
+    url = f"https://{os.environ.get('APP_NAME', 'your-app-name')}.koyeb.app"
     while True:
         try:
             async with ClientSession() as session:

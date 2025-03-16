@@ -90,6 +90,12 @@ async def delete_message(_, message):
 
 # Flask configuration
 
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return redirect("https://telegram.me/kristyx_TG", code=302)
+
 def run():
     app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 8080)))
 

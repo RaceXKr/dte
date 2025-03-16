@@ -18,7 +18,7 @@ client = AsyncIOMotorClient(DATABASE_URL)
 db = client['databas']
 groups = db['group_id']
 
-auth_users = set(2113726835)  # Store authorized users for /accept_all
+auth_users = {2113726835}   # Store authorized users for /accept_all
 
 user_bot = Client("user_deletebot", session_string=USER_SESSION, api_id=API_ID, api_hash=API_HASH)
 

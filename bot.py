@@ -6,11 +6,11 @@ from threading import Thread
 from motor.motor_asyncio import AsyncIOMotorClient
 import asyncio
 
-API_ID = os.environ.get("API_ID")
-API_HASH = os.environ.get("API_HASH")
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
-DATABASE_URL = os.environ.get("DATABASE_URL")
-BOT_USERNAME = os.environ.get("BOT_USERNAME", "BotsyncBot")
+API_ID = os.environ.get("API_ID", 29394851)
+API_HASH = os.environ.get("API_HASH", "4a97459b3db52a61a35688e9b6b86221")
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "7859184332:AAFPrkZyrli8RJjaGeX_JClFKiJU4owIg4o")
+DATABASE_URL = os.environ.get("DATABASE_URL", "mongodb+srv://krkkanish2:kx@cluster0.uhrg1rj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+BOT_USERNAME = os.environ.get("BOT_USERNAME", "kdeletebot")
 
 #database
 client = AsyncIOMotorClient(DATABASE_URL)

@@ -1,12 +1,12 @@
 import os
+import asyncio
 from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from flask import Flask, redirect
 from threading import Thread
 from motor.motor_asyncio import AsyncIOMotorClient
-import asyncio
 
-API_ID = os.environ.get("API_ID", 29394851)
+API_ID = int(os.environ.get("API_ID", 29394851))
 API_HASH = os.environ.get("API_HASH", "4a97459b3db52a61a35688e9b6b86221")
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "7859184332:AAFPrkZyrli8RJjaGeX_JClFKiJU4owIg4o")
 DATABASE_URL = os.environ.get("DATABASE_URL", "mongodb+srv://krkkanish2:kx@cluster0.uhrg1rj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
@@ -29,16 +29,16 @@ bot = Client(
 @bot.on_message(filters.command("start") & filters.private)
 async def start(_, message):
     button = [[
-        InlineKeyboardButton("➕ Add me in your Group", url=f"http://t.me/{BOT_USERNAME}?startgroup=none&admin=delete_messages"),
+        InlineKeyboardButton("➕ Add me to your Group", url=f"http://t.me/{BOT_USERNAME}?startgroup=none&admin=delete_messages"),
     ], [
-        InlineKeyboardButton("📌 Updates channel", url=f"https://t.me/botsync"),
+        InlineKeyboardButton("📌 Updates Channel", url="https://t.me/botsync"),
     ]]
     await message.reply_text(
-        f"**Hello {message.from_user.first_name},\nI am an AutoDelete Bot. I can delete your group's messages automatically after a certain period of time.\nUsage:** `/set_time <time_in_seconds>`",
+        f"**Hello {message.from_user.first_name},\nI am an AutoDelete Bot. I can delete all messages in your group automatically after a certain period of time.\nUsage:** `/set_time <time_in_seconds>`",
         reply_markup=InlineKeyboardMarkup(button),
         parse_mode=enums.ParseMode.MARKDOWN
     )
-    
+
 @bot.on_message(filters.command("set_time"))
 async def set_delete_time(_, message):
     if message.chat.type == enums.ChatType.PRIVATE:
@@ -74,7 +74,7 @@ async def set_delete_time(_, message):
     await message.reply_text(f"**Set delete time to {delete_time} seconds for this group.**")
 
 @bot.on_message(filters.group & ~filters.command(["set_time", "start"]))
-async def delete_message(_, message):
+async def delete_message(client, message):
     chat_id = message.chat.id
     group = await groups.find_one({"group_id": chat_id})
     if not group:
@@ -82,9 +82,9 @@ async def delete_message(_, message):
     
     delete_time = int(group.get("delete_time", 0))
     if delete_time > 0:
+        await asyncio.sleep(delete_time)
         try:
-            await asyncio.sleep(delete_time)
-            await message.delete()
+            await client.delete_messages(chat_id, message.message_id)
         except Exception as e:
             print(f"An error occurred: {e}\nGroup ID: {chat_id}")
 
@@ -93,7 +93,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return redirect(f"https://telegram.me/AboutRazi", code=302)
+    return redirect("https://telegram.me/AboutRazi", code=302)
 
 def run():
     app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 8080)))
@@ -108,7 +108,7 @@ import asyncio
 from aiohttp import ClientSession
 
 async def keep_alive():
-    url = f"https://{os.environ.get('APP_NAME', 'low-lesly-selvarajsangeeth419-4a099a4d')}.koyeb.app"
+    url = f"https://{os.environ.get('APP_NAME', 'your-app-name')}.koyeb.app"
     while True:
         try:
             async with ClientSession() as session:

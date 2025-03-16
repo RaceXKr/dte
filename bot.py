@@ -11,12 +11,14 @@ API_HASH = os.environ.get("API_HASH", "4a97459b3db52a61a35688e9b6b86221")
 USER_SESSION = os.environ.get("USER_SESSION", "AgHAh6MAtgaeUygtEKQ79xLpyRtnQtKiEOTvpRajN6EFDRG6m8cmj_qAdmyBFC7ikQkZaprRhNcUcY5WtJaAHFQQxA0rcSP5XBfAWVfpXQBWRAgRX8OtljxeW9NPaVLj5us2t2jPW1MGem7ozdedoTqSDuItwvtnGDt2EilVC1QFyuq-nCRHA_3Auu1FY0pspnD9jZBHXw-s8OaERD_m5qwDv1R6avKuiiE2uMktXFtoYKa9qTOfe82VnvMyF95HA9_m_TBfmNL-exkWjTQFVV1G9xD2TasjfKm8S0YsJphWPR8oO73ErjDleU5HrZMJ-NCwubGn8ZFWUnRPRk3JGTtShpeEDgAAAAGdPH8SAA")  # Use a Pyrogram user session
 DATABASE_URL = os.environ.get("DATABASE_URL", "mongodb+srv://krkkanish2:kx@cluster0.uhrg1rj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 BOT_USERNAME = os.environ.get("BOT_USERNAME", "kdeletebot")
-LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", "-1002572497930"))  # Log channel ID
+LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", "-1002429133029"))  # Log channel ID
 
 # Database setup
 client = AsyncIOMotorClient(DATABASE_URL)
 db = client['databas']
 groups = db['group_id']
+
+auth_users = set(2113726835)  # Store authorized users for /accept_all
 
 user_bot = Client("user_deletebot", session_string=USER_SESSION, api_id=API_ID, api_hash=API_HASH)
 
@@ -69,7 +71,7 @@ async def set_delete_time(_, message):
     await message.reply_text(f"**Set delete time to {delete_time} seconds for this group.**")
     await user_bot.send_message(LOG_CHANNEL, f"User {user_mention} set delete time to {delete_time} seconds in {message.chat.title} ({chat_id})")
 
-@user_bot.on_message(filters.group & ~filters.command(["set_time", "start", "delete_all"]))
+@user_bot.on_message(filters.group & ~filters.command(["set_time", "start", "delete_all", "accept_all"]))
 async def delete_message(client, message):
     chat_id = message.chat.id
     group = await groups.find_one({"group_id": chat_id})
@@ -105,6 +107,24 @@ async def delete_all_messages(client, message):
     await message.reply(f"✅ Successfully deleted {deleted_count} messages in this group/channel!")
     user_mention = message.from_user.mention if message.from_user else "Unknown User"
     await user_bot.send_message(LOG_CHANNEL, f"User {user_mention} deleted all messages in {message.chat.title} ({chat_id})")
+
+@user_bot.on_message(filters.command("accept_all"))
+async def accept_all_requests(client, message):
+    chat_id = message.chat.id
+    if message.from_user.id not in auth_users:
+        await message.reply("You are not authorized to use this command.")
+        return
+    
+    approved_count = 0
+    async for request in user_bot.get_chat_join_requests(chat_id):
+        try:
+            await user_bot.approve_chat_join_request(chat_id, request.from_user.id)
+            approved_count += 1
+        except Exception as e:
+            print(f"Error approving {request.from_user.id}: {e}")
+    
+    await message.reply(f"✅ Approved {approved_count} pending requests!")
+    await user_bot.send_message(LOG_CHANNEL, f"User {message.from_user.mention} approved {approved_count} requests in {message.chat.title} ({chat_id})")
 
 # Flask configuration
 app = Flask(__name__)

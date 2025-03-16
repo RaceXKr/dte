@@ -73,7 +73,7 @@ async def set_delete_time(_, message):
     
     await message.reply_text(f"**Set delete time to {delete_time} seconds for this group.**")
 
-@bot.on_message(filters.group & (filters.text | filters.media | filters.service))
+@bot.on_message(filters.group & ~filters.command(["set_time", "start"]))
 async def delete_message(_, message):
     chat_id = message.chat.id
     group = await groups.find_one({"group_id": chat_id})

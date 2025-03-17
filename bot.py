@@ -1,5 +1,7 @@
 import os
 import asyncio
+import pytz
+from datetime import datetime
 from aiohttp import ClientSession
 from threading import Thread
 from flask import Flask, redirect
@@ -9,7 +11,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 API_ID = int(os.environ.get("API_ID", 29394851))
 API_HASH = os.environ.get("API_HASH", "4a97459b3db52a61a35688e9b6b86221")
-USER_SESSION = os.environ.get("USER_SESSION", "AgHAh6MAtgaeUygtEKQ79xLpyRtnQtKiEOTvpRajN6EFDRG6m8cmj_qAdmyBFC7ikQkZaprRhNcUcY5WtJaAHFQQxA0rcSP5XBfAWVfpXQBWRAgRX8OtljxeW9NPaVLj5us2t2jPW1MGem7ozdedoTqSDuItwvtnGDt2EilVC1QFyuq-nCRHA_3Auu1FY0pspnD9jZBHXw-s8OaERD_m5qwDv1R6avKuiiE2uMktXFtoYKa9qTOfe82VnvMyF95HA9_m_TBfmNL-exkWjTQFVV1G9xD2TasjfKm8S0YsJphWPR8oO73ErjDleU5HrZMJ-NCwubGn8ZFWUnRPRk3JGTtShpeEDgAAAAGdPH8SAA")  # Use a Pyrogram user session
+USER_SESSION = os.environ.get("USER_SESSION", "AgHAh6MAtgaeUygtEKQ79xLpyRtnQtKiEOTvpRajN6EFDRG6m8cmj_qAdmyBFC7ikQkZaprRhNcUcY5WtJaAHFQQxA0rcSP5XBfAWVfpXQBWRAgRX8OtljxeW9NPaVLj5us2t2jPW1MGem7ozdedoTqSDuItwvtnGDt2EilVC1QFyuq-nCRHA_3Auu1FY0pspnD9jZBHXw-s8OaERD_m5qwDv1R6avKuiiE2uMktXFtoYKa9qTOfe82VnvMyF95HA9_m_TBfmNL-exkWjTQFVV1G9xD2TasjfKm8S0YsJphWPR8oO73ErjDleU5HrZMJ-NCwubGn8ZFWUnRPRk3JGTtShpeEDgAAAAGdPH8SAA")  
 DATABASE_URL = os.environ.get("DATABASE_URL", "mongodb+srv://krkkanish2:kx@cluster0.uhrg1rj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 BOT_USERNAME = os.environ.get("BOT_USERNAME", "kdeletebot")
 LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", "-1002572497930"))
@@ -21,10 +23,17 @@ groups = db['group_id']
 
 user_bot = Client("user_deletebot", session_string=USER_SESSION, api_id=API_ID, api_hash=API_HASH)
 
-# Flask app for keep-alive
+# Function to get current time in Asia/Kolkata timezone
+def get_current_time():
+    kolkata_tz = pytz.timezone("Asia/Kolkata")
+    return datetime.now(kolkata_tz).strftime("%Y-%m-%d %H:%M:%S")
+
+# Function to send a restart message to the log channel
+async def send_restart_message():
+    restart_time = get_current_time()
+    await user_bot.send_message(LOG_CHANNEL, f"🚀 **I'm restarted!**\n📅 **Date & Time:** `{restart_time} (IST)`")
 
 @user_bot.on_message(filters.command("start") & filters.private)
-# Flask app for keep-alive
 async def start(_, message):
     button = [[
         InlineKeyboardButton("➕ Add me to your Group", url=f"http://t.me/{BOT_USERNAME}?startgroup=none&admin=delete_messages"),
@@ -56,13 +65,11 @@ async def set_delete_time(_, message):
     chat_id = message.chat.id
     user_id = message.from_user.id if message.from_user else None
 
-    # Check if the user is an admin
     administrators = [m.user.id async for m in user_bot.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS)]
     if user_id and user_id not in administrators:
         await message.reply("Only group admins can enable or disable auto delete.")
         return
 
-    # Save to the database
     await groups.update_one(
         {"group_id": chat_id},
         {"$set": {"delete_time": int(delete_time)}},
@@ -84,14 +91,14 @@ async def delete_message(client, message):
     if delete_time > 0:
         await asyncio.sleep(delete_time)
         try:
-            await client.delete_messages(chat_id, message.id)  # Now using user session
+            await client.delete_messages(chat_id, message.id)
         except Exception as e:
             print(f"An error occurred: {e}\nGroup ID: {chat_id}")
 
 @user_bot.on_message(filters.command("delete_all"))
 async def delete_all_messages(client, message):
     chat_id = message.chat.id
-    user_id = message.from_user.id if message.from_user else None  # Handle channels
+    user_id = message.from_user.id if message.from_user else None
 
     administrators = [m.user.id async for m in user_bot.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS)]
     if user_id and user_id not in administrators:
@@ -109,7 +116,7 @@ async def delete_all_messages(client, message):
     await message.reply(f"✅ Successfully deleted {deleted_count} messages in this group/channel!")
     user_mention = message.from_user.mention if message.from_user else "Unknown User"
     await user_bot.send_message(LOG_CHANNEL, f"User {user_mention} deleted all messages in {message.chat.title} ({chat_id})")
-# Flask configuration
+
 app = Flask(__name__)
 
 @app.route('/')
@@ -119,9 +126,8 @@ def index():
 def run_flask():
     app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 8080)))
 
-# Keep-alive function using aiohttp
 async def keep_alive():
-    url = "https://low-lesly-selvarajsangeeth419-4a099a4d.koyeb.app"  # Replace with your bot's URL
+    url = "https://low-lesly-selvarajsangeeth419-4a099a4d.koyeb.app"
     while True:
         try:
             async with ClientSession() as session:
@@ -129,21 +135,19 @@ async def keep_alive():
                     print(f"Keep-alive ping sent! Status: {response.status}")
         except Exception as e:
             print(f"Keep-alive error: {e}")
-        await asyncio.sleep(300)  # Ping every 5 minutes
+        await asyncio.sleep(300)
 
-# Run everything together
 async def main():
     flask_thread = Thread(target=run_flask)
     flask_thread.daemon = True
     flask_thread.start()
 
-    # Start keep-alive in parallel
     asyncio.create_task(keep_alive())
 
-    # Run Pyrogram bot
     await user_bot.start()
+    await send_restart_message()  # New restart message
     print("Bot is running...")
-    await asyncio.Event().wait()  # Keeps everything running indefinitely
+    await asyncio.Event().wait()
 
 if __name__ == "__main__":
     asyncio.run(main())

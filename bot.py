@@ -6,8 +6,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 API_ID = int(os.environ.get("API_ID", 29394851))
 API_HASH = os.environ.get("API_HASH", "4a97459b3db52a61a35688e9b6b86221")
-USER_SESSION = os.environ.get("USER_SESSION", "AgHAh6MAtgaeUygtEKQ79xLpyRtnQtKiEOTvpRajN6EFDRG6m8cmj_qAdmyBFC7ikQkZaprRhNcUcY5WtJaAHFQQxA0rcSP5XBfAWVfpXQBWRAgRX8OtljxeW9NPaVLj5us2t2jPW1MGem7ozdedoTqSDuItwvtnGDt2EilVC1QFyuq-nCRHA_3Auu1FY0pspnD9jZBHXw-s8OaERD_m5qwDv1R6avKuiiE2uMktXFtoYKa9qTOfe82VnvMyF95HA9_m_TBfmNL-exkWjTQFVV1G9xD2TasjfKm8S0YsJphWPR8oO73ErjDleU5HrZMJ-NCwubGn8ZFWUnRPRk3JGTtShpeEDgAAAAGdPH8SAA")  # Use a Pyrogram user session
-DATABASE_URL = os.environ.get("DATABASE_URL", "mongodb+srv://krkkanish2:kx@cluster0.uhrg1rj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+USER_SESSION = os.environ.get("USER_SESSION", "YOUR_SESSION_STRING")
+DATABASE_URL = os.environ.get("DATABASE_URL", "YOUR_MONGODB_URL")
 BOT_USERNAME = os.environ.get("BOT_USERNAME", "kdeletebot")
 LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", "-1002572497930"))
 
@@ -119,20 +119,5 @@ async def keep_alive():
         await asyncio.sleep(300)  # Ping every 5 minutes
  
  
-# Run everything together
- async def main():
-    flask_thread = Thread(target=run_flask)
-    flask_thread.daemon = True
-    flask_thread.start()
-
-    # Start keep-alive in parallel
-    asyncio.create_task(keep_alive())
-
-    # Run Pyrogram bot
-     await user_bot.start()
-     print("Bot is running...")
-    await asyncio.Event().wait()  # Keeps everything running indefinitely
- 
- 
- if __name__ == "__main__":
-     asyncio.run(main())
+# Run bot
+user_bot.run()

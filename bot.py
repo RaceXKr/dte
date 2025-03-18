@@ -1,8 +1,5 @@
 import os
 import asyncio
-from aiohttp import ClientSession
-from threading import Thread
-from flask import Flask, redirect
 from pyrogram import Client, filters, enums
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -21,10 +18,7 @@ groups = db['group_id']
 
 user_bot = Client("user_deletebot", session_string=USER_SESSION, api_id=API_ID, api_hash=API_HASH)
 
-# Flask app for keep-alive
-
 @user_bot.on_message(filters.command("start") & filters.private)
-# Flask app for keep-alive
 async def start(_, message):
     button = [[
         InlineKeyboardButton("➕ Add me to your Group", url=f"http://t.me/{BOT_USERNAME}?startgroup=none&admin=delete_messages"),
@@ -44,34 +38,27 @@ async def set_delete_time(_, message):
         return
 
     args = message.text.split()
-    if len(args) == 1:
+    if len(args) == 1 or not args[1].isdigit():
         await message.reply_text("**Please provide the delete time in seconds. Usage:** `/set_time <time_in_seconds>`")
         return
 
-    delete_time = args[1]
-    if not delete_time.isdigit():
-        await message.reply_text("Delete time must be an integer.")
-        return
-
+    delete_time = int(args[1])
     chat_id = message.chat.id
     user_id = message.from_user.id if message.from_user else None
 
-    # Check if the user is an admin
     administrators = [m.user.id async for m in user_bot.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS)]
     if user_id and user_id not in administrators:
         await message.reply("Only group admins can enable or disable auto delete.")
         return
 
-    # Save to the database
     await groups.update_one(
         {"group_id": chat_id},
-        {"$set": {"delete_time": int(delete_time)}},
+        {"$set": {"delete_time": delete_time}},
         upsert=True
     )
 
-    user_mention = message.from_user.mention if message.from_user else "Unknown User"
     await message.reply_text(f"**Set delete time to {delete_time} seconds for this group.**")
-    await user_bot.send_message(LOG_CHANNEL, f"User {user_mention} set delete time to {delete_time} seconds in {message.chat.title} ({chat_id})")
+    await user_bot.send_message(LOG_CHANNEL, f"User {message.from_user.mention} set delete time to {delete_time} seconds in {message.chat.title} ({chat_id})")
 
 @user_bot.on_message(filters.group & ~filters.command(["set_time", "start", "delete_all"]))
 async def delete_message(client, message):
@@ -80,18 +67,18 @@ async def delete_message(client, message):
     if not group:
         return
 
-    delete_time = int(group.get("delete_time", 0))
+    delete_time = group.get("delete_time", 0)
     if delete_time > 0:
         await asyncio.sleep(delete_time)
         try:
-            await client.delete_messages(chat_id, message.id)  # Now using user session
+            await client.delete_messages(chat_id, message.id)
         except Exception as e:
-            print(f"An error occurred: {e}\nGroup ID: {chat_id}")
+            print(f"Error deleting message in {chat_id}: {e}")
 
 @user_bot.on_message(filters.command("delete_all"))
 async def delete_all_messages(client, message):
     chat_id = message.chat.id
-    user_id = message.from_user.id if message.from_user else None  # Handle channels
+    user_id = message.from_user.id if message.from_user else None
 
     administrators = [m.user.id async for m in user_bot.get_chat_members(chat_id, filter=enums.ChatMembersFilter.ADMINISTRATORS)]
     if user_id and user_id not in administrators:
@@ -107,8 +94,8 @@ async def delete_all_messages(client, message):
             print(f"Error deleting message {msg.id}: {e}")
 
     await message.reply(f"✅ Successfully deleted {deleted_count} messages in this group/channel!")
-    user_mention = message.from_user.mention if message.from_user else "Unknown User"
-    await user_bot.send_message(LOG_CHANNEL, f"User {user_mention} deleted all messages in {message.chat.title} ({chat_id})")
+    await user_bot.send_message(LOG_CHANNEL, f"User {message.from_user.mention} deleted all messages in {message.chat.title} ({chat_id})")
+
 # Flask configuration
 app = Flask(__name__)
 
@@ -130,9 +117,10 @@ async def keep_alive():
         except Exception as e:
             print(f"Keep-alive error: {e}")
         await asyncio.sleep(300)  # Ping every 5 minutes
-
+ 
+ 
 # Run everything together
-async def main():
+ async def main():
     flask_thread = Thread(target=run_flask)
     flask_thread.daemon = True
     flask_thread.start()
@@ -141,9 +129,10 @@ async def main():
     asyncio.create_task(keep_alive())
 
     # Run Pyrogram bot
-    await user_bot.start()
-    print("Bot is running...")
+     await user_bot.start()
+     print("Bot is running...")
     await asyncio.Event().wait()  # Keeps everything running indefinitely
-
-if __name__ == "__main__":
-    asyncio.run(main())
+ 
+ 
+ if __name__ == "__main__":
+     asyncio.run(main())

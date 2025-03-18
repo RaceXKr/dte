@@ -71,7 +71,7 @@ async def delete_message(client, message):
     if not group:
         return
 
-    delete_time = group.get("delete_time", 0)
+    delete_time = int(group.get("delete_time", 0))
     if delete_time > 0:
         await asyncio.sleep(delete_time)
         try:

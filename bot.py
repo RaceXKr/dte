@@ -13,7 +13,6 @@ USER_SESSION = os.environ.get("USER_SESSION", "AgHAh6MAtgaeUygtEKQ79xLpyRtnQtKiE
 DATABASE_URL = os.environ.get("DATABASE_URL", "mongodb+srv://krkkanish2:kx@cluster0.uhrg1rj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 
 BOT_USERNAME = os.environ.get("BOT_USERNAME", "kdeletebot")
-LOG_CHANNEL = int(os.environ.get("LOG_CHANNEL", "-1002572497930"))
 
 # Database setup
 client = AsyncIOMotorClient(DATABASE_URL)
@@ -62,7 +61,6 @@ async def set_delete_time(_, message):
     )
 
     await message.reply_text(f"**Set delete time to {delete_time} seconds for this group.**")
-    await user_bot.send_message(LOG_CHANNEL, f"User {message.from_user.mention} set delete time to {delete_time} seconds in {message.chat.title} ({chat_id})")
 
 @user_bot.on_message(filters.group & ~filters.command(["set_time", "start", "delete_all"]))
 async def delete_message(client, message):
@@ -98,7 +96,6 @@ async def delete_all_messages(client, message):
             print(f"Error deleting message {msg.id}: {e}")
 
     await message.reply(f"✅ Successfully deleted {deleted_count} messages in this group/channel!")
-    await user_bot.send_message(LOG_CHANNEL, f"User {message.from_user.mention} deleted all messages in {message.chat.title} ({chat_id})")
 
 # Flask configuration
 app = Flask(__name__)
@@ -121,7 +118,6 @@ async def keep_alive():
         except Exception as e:
             print(f"Keep-alive error: {e}")
         await asyncio.sleep(300)  # Ping every 5 minutes
- 
- 
+
 # Run bot
 user_bot.run()

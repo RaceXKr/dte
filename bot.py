@@ -105,7 +105,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return redirect("https://telegram.me/AboutRazi", code=302)
+    return redirect("https://telegram.me/KristyX_TG", code=302)
 
 def run_flask():
     app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 8080)))
